@@ -1,0 +1,945 @@
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: helm-toolkit
+data:
+  chart_name: helm-toolkit
+  release: helm-toolkit
+  namespace: helm-tookit
+  values: {}
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: helm-toolkit
+    reference: 2.0.0
+  dependencies: []
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ceph
+data:
+  chart_name: ceph
+  release: ceph
+  namespace: ceph
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-ceph
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    endpoints:
+      identity:
+        namespace: "openstack"
+      object_store:
+        namespace: "ceph"
+      ceph_mon:
+        namespace: "ceph"
+    ceph:
+      enabled:
+        mds: true
+      rgw_keystone_auth: true
+    deployment:
+      storage_secrets: true
+      ceph: true
+      rbd_provisioner: true
+      client_secrets: false
+      rgw_keystone_user_and_endpoints: false
+    bootstrap:
+      enabled: true
+    conf:
+      ceph:
+        config:
+          global:
+            mon_host: null
+            osd_pool_default_size: 1
+          osd:
+            osd_crush_chooseleaf_type: 0
+    storageclass:
+      provision_storage_class: true
+      user_id: admin
+    manifests:
+      daemonset_mon: true
+      deployment_rgw: true
+      deployment_moncheck: true
+    network:
+      public: 192.168.1.0/24
+      cluster: 192.168.1.0/24
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: ceph
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ceph-openstack-config
+data:
+  chart_name: ceph-openstack-config
+  release: ceph-openstack-config
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-ceph-openstack-config
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    endpoints:
+      identity:
+        namespace: "openstack"
+      object_store:
+        namespace: "ceph"
+      ceph_mon:
+        namespace: "ceph"
+    ceph:
+      enabled:
+        mds: true
+      rgw_keystone_auth: true
+    deployment:
+      storage_secrets: false
+      ceph: false
+      rbd_provisioner: false
+      client_secrets: true
+      rgw_keystone_user_and_endpoints: false
+    bootstrap:
+      enabled: false
+    conf:
+      ceph:
+        config:
+          global:
+            mon_host: null
+            osd_pool_default_size: 1
+          osd:
+            osd_crush_chooseleaf_type: 0
+    storageclass:
+      provision_storage_class: false
+      user_id: admin
+    manifests:
+      daemonset_mon: false 
+      deployment_rgw: false 
+      deployment_moncheck: false
+    network:
+      public: 192.168.1.0/24
+      cluster: 192.168.1.0/24
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: ceph
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: mariadb
+data:
+  chart_name: mariadb
+  release: mariadb
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-mariadb
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    pod:
+      replicas:
+        server: 1
+    volume:
+      enabled: false
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: mariadb
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ingress 
+data:
+  chart_name: ingress
+  release: ingress
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-ingress
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    config:
+      worker-processes: "8"
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: ingress
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: etcd 
+data:
+  chart_name: etcd
+  release: etcd
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-etcd
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    pod:
+      replicas:
+        etcd: 1
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: etcd
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: rabbitmq
+data:
+  chart_name: rabbitmq
+  release: rabbitmq
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-rabbitmq
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    pod:
+      replicas:
+        server: 1
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: rabbitmq
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: memcached
+data:
+  chart_name: memcached
+  release: memcached
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-memcached
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    pod:
+      replicas:
+        server: 1
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: memcached
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: libvirt
+data:
+  chart_name: libvirt
+  release: libvirt
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-libvirt
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    images:
+      tags:
+        libvirt: docker.io/kolla/ubuntu-source-nova-libvirt:4.0.0
+      pull_policy: Always
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: libvirt
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: openvswitch
+data:
+  chart_name: openvswitch
+  release: openvswitch
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-openvswitch
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    images:
+      tags:
+        openvswitch_db_server: docker.io/kolla/ubuntu-source-openvswitch-db-server:4.0.0
+        openvswitch_vswitchd: docker.io/kolla/ubuntu-source-openvswitch-vswitchd:4.0.0
+      pull_policy: Always
+    network:
+      external_bridge: br-ex
+      interface:
+        external: null
+      auto_bridge_add: {}
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: openvswitch
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: keystone
+data:
+  chart_name: keystone
+  release: keystone
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-keystone
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+        - name: keystone-bootstrap
+          type: job
+          labels:
+            application: keystone
+            component: bootstrap
+        - name: keystone-credential-setup 
+          type: job
+          labels:
+            application: keystone
+            component: credential-setup
+        - name: keystone-db-init
+          type: job
+          labels:
+            application: keystone
+            component: db-init
+        - name: keystone-db-sync
+          type: job
+          labels:
+            application: keystone
+            component: db-sync
+        - name: keystone-fernet-setup
+          type: job
+          labels:
+            application: keystone
+            component: fernet-setup
+  values:
+    images:
+      bootstrap: docker.io/kolla/ubuntu-source-keystone:4.0.0
+      test: docker.io/kolla/ubuntu-source-rally:4.0.0
+      db_init: docker.io/kolla/ubuntu-source-keystone:4.0.0
+      db_sync: docker.io/kolla/ubuntu-source-keystone:4.0.0
+      api: docker.io/kolla/ubuntu-source-keystone:4.0.0
+      pull_policy: Always
+    conf:
+      keystone:
+        DEFAULT:
+          debug: true
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: keystone
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: glance
+data:
+  chart_name: glance
+  release: glance
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-glance
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+        - name: glance-bootstrap
+          type: job
+          labels:
+            application: glance
+            component: bootstrap
+        - name: glance-storage-init
+          type: job
+          labels:
+            application: glance
+            component: storage-init
+        - name: glance-db-init 
+          type: job
+          labels:
+            application: glance
+            component: db-init
+        - name: glance-db-sync
+          type: job
+          labels:
+            application: glance
+            component: db-sync
+        - name: glance-ks-endpoints
+          type: job
+          labels:
+            application: glance
+            component: ks-endpoints
+        - name: glance-ks-service
+          type: job
+          labels:
+            application: glance
+            component: ks-service
+        - name: glance-ks-user
+          type: job
+          labels:
+            application: glance
+            component: ks-user
+  values:
+    storage: rbd
+    images:
+      tags:
+        test: docker.io/kolla/ubuntu-source-rally:4.0.0
+        glance_storage_init: quay.io/attcomdev/ceph-daemon:tag-build-master-jewel-ubuntu-16.04
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        glance_db_sync: docker.io/kolla/ubuntu-source-glance-api:4.0.0
+        db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_user: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_service: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_endpoints: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        glance_api: docker.io/kolla/ubuntu-source-glance-api:4.0.0
+        glance_registry: docker.io/kolla/ubuntu-source-glance-registry:4.0.0
+        bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
+      pull_policy: Always
+    pod:
+      user:
+        glance:
+          uid: 42415
+    network:
+      api:
+        ingress:
+          proxy_body_size: 102400M
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: glance
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: nova
+data:
+  chart_name: nova
+  release: nova
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-nova
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+        - name: nova-bootstrap
+          type: job
+          labels:
+            application: nova
+            component: bootstrap
+        - name: nova-cell-setup 
+          type: job
+          labels:
+            application: nova
+            component: cell-setup
+        - name: nova-db-init 
+          type: job
+          labels:
+            application: nova
+            component: db-init
+        - name: nova-db-sync
+          type: job
+          labels:
+            application: nova
+            component: db-sync
+        - name: nova-ks-endpoints
+          type: job
+          labels:
+            application: nova
+            component: ks-endpoints
+        - name: nova-ks-service
+          type: job
+          labels:
+            application: nova
+            component: ks-service
+        - name: nova-ks-user
+          type: job
+          labels:
+            application: nova
+            component: ks-user
+        - name: placement-ks-endpoints
+          type: job
+          labels:
+            application: placement
+            component: ks-endpoints
+        - name: placement-ks-service
+          type: job
+          labels:
+            application: placement
+            component: ks-service
+        - name: placement-ks-user
+          type: job
+          labels:
+            application: placement
+            component: ks-user
+  values:
+    images:
+      tags:
+        test: docker.io/kolla/ubuntu-source-rally:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        db_sync: docker.io/kolla/ubuntu-source-nova-api:4.0.0
+        db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_user: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_service: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_endpoints: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        api: docker.io/kolla/ubuntu-source-nova-api:4.0.0
+        conductor: docker.io/kolla/ubuntu-source-nova-conductor:4.0.0
+        scheduler: docker.io/kolla/ubuntu-source-nova-scheduler:4.0.0
+        novncproxy: docker.io/kolla/ubuntu-source-nova-novncproxy:4.0.0
+        novncproxy_assets: docker.io/kolla/ubuntu-source-nova-novncproxy:4.0.0
+        consoleauth: docker.io/kolla/ubuntu-source-nova-consoleauth:4.0.0
+        compute: docker.io/kolla/ubuntu-source-nova-compute:4.0.0
+        compute_ssh: docker.io/kolla/ubuntu-source-nova-ssh:4.0.0
+        placement: docker.io/kolla/ubuntu-source-nova-placement-api:4.0.0
+        bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
+        cell_setup: docker.io/kolla/ubuntu-source-nova-api:4.0.0
+      pull_policy: Always
+    network:
+      novncproxy:
+        name: "nova-novncproxy"
+        node_port:
+          enabled: true
+          port: 30608
+        port: 6080
+        targetPort: 6080
+    conf:
+      nova:
+        DEFAULT:
+          scheduler_default_filters: "RetryFilter,AvailabilityZoneFilter,RamFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ServerGroupAntiAffinityFilter,ServerGroupAffinityFilter"
+          debug: true
+        vnc:
+          novncproxy_base_url: http://taco-aio:30608/vnc_auto.html
+        scheduler:
+          discover_hosts_in_cells_interval: 60
+        libvirt:
+          virt_type: "qemu"
+    endpoints:
+      oslo_db_cell0:
+        path: /nova_cell0
+    pod:
+      user:
+        nova:
+          uid: 42436
+      replicas:
+        api_metadata: 1
+        osapi: 1
+        conductor: 1
+        consoleauth: 1
+        scheduler: 1
+        novncproxy: 1
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: nova
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: neutron
+data:
+  chart_name: neutron
+  release: neutron
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-neutron
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+        - name: neutron-db-init 
+          type: job
+          labels:
+            application: neutron
+            component: db-init
+        - name: neutron-db-sync
+          type: job
+          labels:
+            application: neutron
+            component: db-sync
+        - name: neutron-ks-endpoints
+          type: job
+          labels:
+            application: neutron
+            component: ks-endpoints
+        - name: neutron-ks-service
+          type: job
+          labels:
+            application: neutron
+            component: ks-service
+        - name: neutron-ks-user
+          type: job
+          labels:
+            application: neutron
+            component: ks-user
+  values:
+    images:
+      tags:
+        bootstrap: docker.io/kolla/ubuntu-source-neutron-server:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-neutron-server:4.0.0
+        neutron_db_sync: docker.io/kolla/ubuntu-source-neutron-server:4.0.0
+        ks_user: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
+        ks_service: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
+        ks_endpoints: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
+        neutron_server: docker.io/kolla/ubuntu-source-neutron-server:4.0.0
+        neutron_dhcp: docker.io/kolla/ubuntu-source-neutron-dhcp-agent:4.0.0
+        neutron_metadata: docker.io/kolla/ubuntu-source-neutron-metadata-agent:4.0.0
+        neutron_l3: docker.io/kolla/ubuntu-source-neutron-l3-agent:4.0.0
+        neutron_openvswitch_agent: docker.io/kolla/ubuntu-source-neutron-openvswitch-agent:4.0.0
+        neutron_linuxbridge_agent: docker.io/kolla/ubuntu-source-neutron-linuxbridge-agent:4.0.0
+      pull_policy: Always
+    labels:
+      agent:
+        metadata:
+          # use config drive for medata service
+          node_selector_value: "disabled"
+    pod:
+      user:
+        neutron:
+          uid: 42435
+    conf:
+      neutron_sudoers:
+        override: |
+          # This sudoers file supports rootwrap-daemon for both Kolla and LOCI Images.
+          Defaults !requiretty
+          Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/var/lib/openstack/bin:/var/lib/kolla/venv/bin"
+          neutron ALL = (root) NOPASSWD: /var/lib/kolla/venv/bin/neutron-rootwrap-daemon /etc/neutron/rootwrap.conf, /var/lib/openstack/bin/neutron-rootwrap-daemon /etc/neutron/rootwrap.conf
+      neutron:
+        DEFAULT:
+          l3_ha: False
+        agent:
+          root_helper: sudo
+          root_helper_daemon: sudo neutron-rootwrap-daemon /etc/neutron/rootwrap.conf
+      plugins:
+        ml2_conf:
+          ml2:
+            type_drivers: flat, vxlan
+            tenant_network_types: vxlan
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: neutron
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: cinder
+data:
+  chart_name: cinder
+  release: cinder
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-cinder
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+    pre:
+      delete:
+        - name: cinder-bootstrap
+          type: job
+          labels:
+            application: cinder
+            component: bootstrap
+        - name: cinder-db-init 
+          type: job
+          labels:
+            application: cinder 
+            component: db-init
+        - name: cinder-db-sync
+          type: job
+          labels:
+            application: cinder
+            component: db-sync
+        - name: cinder-ks-endpoints
+          type: job
+          labels:
+            application: cinder
+            component: ks-endpoints
+        - name: cinder-ks-service
+          type: job
+          labels:
+            application: cinder
+            component: ks-service
+        - name: cinder-ks-user
+          type: job
+          labels:
+            application: cinder
+            component: ks-user
+  values:
+    conf:
+      cinder:
+        DEFAULT:
+          debug: true
+    images:
+      tags:
+        ks_user: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
+        ks_service: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
+        ks_endpoints: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
+        db_sync: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
+        api: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
+        bootstrap: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
+        scheduler: docker.io/kolla/ubuntu-source-cinder-scheduler:4.0.0
+        volume: docker.io/kolla/ubuntu-source-cinder-volume:4.0.0
+        backup: docker.io/kolla/ubuntu-source-cinder-backup:4.0.0
+      pull_policy: Always
+    pod:
+      user:
+        cinder:
+          uid: 42407
+      replicas:
+        api: 1
+        backup: 1
+        scheduler: 1
+        volume: 1
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: cinder
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: heat
+data:
+  chart_name: heat
+  release: heat
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-heat
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    images:
+      tags:
+        bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        heat_db_sync: docker.io/kolla/ubuntu-source-heat-api:4.0.0
+        db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_user: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_service: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_endpoints: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        heat_api: docker.io/kolla/ubuntu-source-heat-api:4.0.0
+        heat_cfn: docker.io/kolla/ubuntu-source-heat-api:4.0.0
+        heat_cloudwatch: docker.io/kolla/ubuntu-source-heat-api:4.0.0
+        heat_engine: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
+      pull_policy: Always
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: heat
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: horizon
+data:
+  chart_name: horizon
+  release: horizon
+  namespace: openstack
+  timeout: 3600
+  wait:
+    timeout: 3600
+    labels:
+      release_group: taco-horizon
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    images:
+      tags:
+        db_init: docker.io/kolla/ubuntu-source-horizon:4.0.0
+        db_sync: docker.io/kolla/ubuntu-source-horizon:4.0.0
+        horizon: docker.io/kolla/ubuntu-source-horizon:4.0.0
+      pull_policy: Always
+    pod:
+      replicas:
+        server: 1
+    local_settings:
+      openstack_neutron_network:
+        enable_router: "True"
+        enable_quotas: "True"
+        enable_ipv6: "False"
+        enable_distributed_router: "False"
+        enable_ha_router: "True"
+        enable_lb: "True"
+        enable_firewall: "False"
+        enable_vpn: "False"
+        enable_fip_topology_check: "True"
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm
+    subpath: horizon
+    reference: 2.0.0
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/ChartGroup/v1
+metadata:
+  schema: metadata/Document/v1
+  name: infra-services
+data:
+  description: "Openstack Infra Services"
+  sequenced: True
+  chart_group:
+    - ceph
+    - ceph-openstack-config
+    - ingress
+    - etcd
+    - rabbitmq
+    - memcached
+    - mariadb
+    - libvirt
+    - openvswitch
+---
+schema: armada/ChartGroup/v1
+metadata:
+  schema: metadata/Document/v1
+  name: openstack-services
+data:
+  description: "Openstack Services"
+  sequenced: False
+  chart_group:
+    - keystone
+    - glance
+    - nova
+    - neutron
+---
+schema: armada/Manifest/v1
+metadata:
+  schema: metadata/Document/v1
+  name: taco-manifest
+data:
+  release_prefix: taco
+  chart_groups:
+    - infra-services
+    - openstack-services
