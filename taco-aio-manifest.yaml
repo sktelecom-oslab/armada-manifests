@@ -105,8 +105,7 @@ data:
         namespace: "ceph"
     ceph:
       enabled:
-        mds: true
-      rgw_keystone_auth: true
+        mds: false
     deployment:
       storage_secrets: false
       ceph: false
@@ -115,24 +114,12 @@ data:
       rgw_keystone_user_and_endpoints: false
     bootstrap:
       enabled: false
-    conf:
-      ceph:
-        config:
-          global:
-            mon_host: null
-            osd_pool_default_size: 1
-          osd:
-            osd_crush_chooseleaf_type: 0
     storageclass:
       provision_storage_class: false
-      user_id: admin
     manifests:
       daemonset_mon: false 
       deployment_rgw: false 
       deployment_moncheck: false
-    network:
-      public: 192.168.1.0/24
-      cluster: 192.168.1.0/24
   source:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
@@ -399,12 +386,18 @@ data:
             component: fernet-setup
   values:
     images:
-      bootstrap: docker.io/kolla/ubuntu-source-keystone:4.0.0
-      test: docker.io/kolla/ubuntu-source-rally:4.0.0
-      db_init: docker.io/kolla/ubuntu-source-keystone:4.0.0
-      db_sync: docker.io/kolla/ubuntu-source-keystone:4.0.0
-      api: docker.io/kolla/ubuntu-source-keystone:4.0.0
-      pull_policy: Always
+      tags:
+        bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        test: docker.io/kolla/ubuntu-source-rally:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        keystone_db_sync: docker.io/kolla/ubuntu-source-keystone:4.0.0
+        db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        keystone_fernet_setup: docker.io/kolla/ubuntu-source-keystone:4.0.0
+        keystone_fernet_rotate: docker.io/kolla/ubuntu-source-keystone:4.0.0
+        keystone_credential_setup: docker.io/kolla/ubuntu-source-keystone:4.0.0
+        keystone_credential_rotate: docker.io/kolla/ubuntu-source-keystone:4.0.0
+        keystone_api: docker.io/kolla/ubuntu-source-keystone:4.0.0
+        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
     conf:
       keystone:
         DEFAULT:
@@ -788,16 +781,19 @@ data:
           debug: true
     images:
       tags:
-        ks_user: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
-        ks_service: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
-        ks_endpoints: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
-        db_init: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
-        db_sync: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
-        api: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
-        bootstrap: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
-        scheduler: docker.io/kolla/ubuntu-source-cinder-scheduler:4.0.0
-        volume: docker.io/kolla/ubuntu-source-cinder-volume:4.0.0
-        backup: docker.io/kolla/ubuntu-source-cinder-backup:4.0.0
+        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
+        ks_user: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_service: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_endpoints: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        cinder_db_sync: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
+        db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        cinder_api: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
+        bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        cinder_scheduler: docker.io/kolla/ubuntu-source-cinder-scheduler:4.0.0
+        cinder_volume: docker.io/kolla/ubuntu-source-cinder-volume:4.0.0
+        cinder_volume_usage_audit: docker.io/kolla/ubuntu-source-cinder-volume:4.0.0
+        cinder_backup: docker.io/kolla/ubuntu-source-cinder-backup:4.0.0
       pull_policy: Always
     pod:
       user:
