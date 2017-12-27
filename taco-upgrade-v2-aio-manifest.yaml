@@ -919,6 +919,8 @@ data:
     - glance
     - nova
     - neutron
+    - cinder
+    - horizon
 ---
 schema: armada/Manifest/v1
 metadata:
