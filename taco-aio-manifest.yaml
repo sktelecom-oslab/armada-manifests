@@ -117,8 +117,8 @@ data:
     storageclass:
       provision_storage_class: false
     manifests:
-      daemonset_mon: false 
-      deployment_rgw: false 
+      daemonset_mon: false
+      deployment_rgw: false
       deployment_moncheck: false
   source:
     type: git
@@ -162,7 +162,7 @@ data:
 schema: armada/Chart/v1
 metadata:
   schema: metadata/Document/v1
-  name: ingress 
+  name: ingress
 data:
   chart_name: ingress
   release: ingress
@@ -190,7 +190,7 @@ data:
 schema: armada/Chart/v1
 metadata:
   schema: metadata/Document/v1
-  name: etcd 
+  name: etcd
 data:
   chart_name: etcd
   release: etcd
@@ -364,7 +364,7 @@ data:
           labels:
             application: keystone
             component: bootstrap
-        - name: keystone-credential-setup 
+        - name: keystone-credential-setup
           type: job
           labels:
             application: keystone
@@ -439,7 +439,7 @@ data:
           labels:
             application: glance
             component: storage-init
-        - name: glance-db-init 
+        - name: glance-db-init
           type: job
           labels:
             application: glance
@@ -521,12 +521,12 @@ data:
           labels:
             application: nova
             component: bootstrap
-        - name: nova-cell-setup 
+        - name: nova-cell-setup
           type: job
           labels:
             application: nova
             component: cell-setup
-        - name: nova-db-init 
+        - name: nova-db-init
           type: job
           labels:
             application: nova
@@ -649,7 +649,7 @@ data:
     no_hooks: false
     pre:
       delete:
-        - name: neutron-db-init 
+        - name: neutron-db-init
           type: job
           labels:
             application: neutron
@@ -749,10 +749,10 @@ data:
           labels:
             application: cinder
             component: bootstrap
-        - name: cinder-db-init 
+        - name: cinder-db-init
           type: job
           labels:
-            application: cinder 
+            application: cinder
             component: db-init
         - name: cinder-db-sync
           type: job
@@ -929,6 +929,8 @@ data:
     - glance
     - nova
     - neutron
+    - cinder
+    - horizon
 ---
 schema: armada/Manifest/v1
 metadata:
