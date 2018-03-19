@@ -304,7 +304,6 @@ data:
     no_hooks: false
   upgrade:
     no_hooks: false
-  values:
   source:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
@@ -330,7 +329,6 @@ data:
     no_hooks: false
   upgrade:
     no_hooks: false
-  values:
   source:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
