@@ -12,7 +12,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: helm-toolkit
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies: []
 ---
 schema: armada/Chart/v1
@@ -32,49 +32,170 @@ data:
     no_hooks: false
   upgrade:
     no_hooks: false
+    pre:
+      delete:
+        - type: job 
+          labels:
+            application: ceph
+            component: bootstrap
+        - type: job 
+          labels:
+            application: ceph
+            component: cephfs-client-key-generator
+        - type: job 
+          labels:
+            application: ceph
+            component: mds-keyring-generator
+        - type: job 
+          labels:
+            application: ceph
+            component: osd-keyring-generator
+        - type: job 
+          labels:
+            application: ceph
+            component: rgw-keyring-generator
+        - type: job 
+          labels:
+            application: ceph
+            component: mon-keyring-generator
+        - type: job 
+          labels:
+            application: ceph
+            component: mgr-keyring-generator
+        - type: job 
+          labels:
+            application: ceph
+            component: rbd-pool
+        - type: job 
+          labels:
+            application: ceph
+            component: storage-keys-generator
   values:
     endpoints:
       identity:
-        namespace: "openstack"
+        namespace: openstack
       object_store:
-        namespace: "ceph"
+        namespace: ceph
       ceph_mon:
-        namespace: "ceph"
-    ceph:
-      enabled:
-        mds: true
-      rgw_keystone_auth: true
+        namespace: ceph
+    network:
+      public: 0.0.0.0/24
+      cluster: 0.0.0.0/24
     deployment:
       storage_secrets: true
       ceph: true
       rbd_provisioner: true
+      cephfs_provisioner: true
       client_secrets: false
       rgw_keystone_user_and_endpoints: false
     bootstrap:
       enabled: true
     conf:
+      rgw_ks:
+        enabled: true
       ceph:
-        config:
-          global:
-            mon_host: null
-            osd_pool_default_size: 1
-          osd:
-            osd_crush_chooseleaf_type: 0
-    storageclass:
-      provision_storage_class: true
-      user_id: admin
-    manifests:
-      daemonset_mon: true
-      deployment_rgw: true
-      deployment_moncheck: true
-    network:
-      public: 192.168.1.0/24
-      cluster: 192.168.1.0/24
+        global:
+          fsid: null
+          osd_pool_default_size: 1
+        osd:
+          osd_crush_chooseleaf_type: 0
+      pool:
+        crush:
+          tunables: null
+        target:
+          osd: 1
+          pg_per_osd: 100
+        default:
+          crush_rule: same_host
+        spec:
+          # RBD pool
+          - name: rbd
+            application: rbd
+            replication: 1
+            percent_total_data: 40
+          # CephFS pools
+          - name: cephfs_metadata
+            application: cephfs
+            replication: 1
+            percent_total_data: 5
+          - name: cephfs_data
+            application: cephfs
+            replication: 1
+            percent_total_data: 10
+          # RadosGW pools
+          - name: .rgw.root
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.control
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.data.root
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.gc
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.log
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.intent-log
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.meta
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.usage
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.users.keys
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.users.email
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.users.swift
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.users.uid
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.buckets.extra
+            application: rgw
+            replication: 1
+            percent_total_data: 0.1
+          - name: default.rgw.buckets.index
+            application: rgw
+            replication: 1
+            percent_total_data: 3
+          - name: default.rgw.buckets.data
+            application: rgw
+            replication: 1
+            percent_total_data: 34.8
+      storage:
+        osd:
+          - data:
+              type: directory
+              location: /var/lib/openstack-helm/ceph/osd/osd-one
+            journal:
+              type: directory
+              location: /var/lib/openstack-helm/ceph/osd/journal-one
   source:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: ceph
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -110,6 +231,7 @@ data:
       storage_secrets: false
       ceph: false
       rbd_provisioner: false
+      cephfs_provisioner: false
       client_secrets: true
       rgw_keystone_user_and_endpoints: false
     bootstrap:
@@ -120,11 +242,13 @@ data:
       daemonset_mon: false
       deployment_rgw: false
       deployment_moncheck: false
+      deployment_rbd_provisioner: false
+      deployment_cephfs_provisioner: false
   source:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: ceph
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -155,7 +279,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: mariadb
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -183,7 +307,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: ingress
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -212,7 +336,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: etcd
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -234,6 +358,8 @@ data:
   upgrade:
     no_hooks: false
   values:
+    volume:
+      enabled: false
     pod:
       replicas:
         server: 1
@@ -241,7 +367,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: rabbitmq
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -270,7 +396,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: memcached
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -300,7 +426,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: libvirt
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -336,7 +462,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: openvswitch
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -392,12 +518,13 @@ data:
         db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         keystone_db_sync: docker.io/kolla/ubuntu-source-keystone:4.0.0
         db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_user: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         keystone_fernet_setup: docker.io/kolla/ubuntu-source-keystone:4.0.0
         keystone_fernet_rotate: docker.io/kolla/ubuntu-source-keystone:4.0.0
         keystone_credential_setup: docker.io/kolla/ubuntu-source-keystone:4.0.0
         keystone_credential_rotate: docker.io/kolla/ubuntu-source-keystone:4.0.0
         keystone_api: docker.io/kolla/ubuntu-source-keystone:4.0.0
-        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
+        keystone_domain_manage: docker.io/kolla/ubuntu-source-keystone:4.0.0
     conf:
       keystone:
         DEFAULT:
@@ -406,7 +533,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: keystone
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -465,11 +592,10 @@ data:
             application: glance
             component: ks-user
   values:
-    storage: rbd
+    storage: pvc
     images:
       tags:
         test: docker.io/kolla/ubuntu-source-rally:4.0.0
-        glance_storage_init: quay.io/attcomdev/ceph-daemon:tag-build-master-jewel-ubuntu-16.04
         db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         glance_db_sync: docker.io/kolla/ubuntu-source-glance-api:4.0.0
         db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
@@ -479,7 +605,6 @@ data:
         glance_api: docker.io/kolla/ubuntu-source-glance-api:4.0.0
         glance_registry: docker.io/kolla/ubuntu-source-glance-registry:4.0.0
         bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
-        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
       pull_policy: Always
     pod:
       user:
@@ -493,7 +618,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: glance
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -570,24 +695,26 @@ data:
     images:
       tags:
         test: docker.io/kolla/ubuntu-source-rally:4.0.0
-        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
-        db_sync: docker.io/kolla/ubuntu-source-nova-api:4.0.0
         db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         ks_user: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         ks_service: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         ks_endpoints: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
-        api: docker.io/kolla/ubuntu-source-nova-api:4.0.0
-        conductor: docker.io/kolla/ubuntu-source-nova-conductor:4.0.0
-        scheduler: docker.io/kolla/ubuntu-source-nova-scheduler:4.0.0
-        novncproxy: docker.io/kolla/ubuntu-source-nova-novncproxy:4.0.0
-        novncproxy_assets: docker.io/kolla/ubuntu-source-nova-novncproxy:4.0.0
-        consoleauth: docker.io/kolla/ubuntu-source-nova-consoleauth:4.0.0
-        compute: docker.io/kolla/ubuntu-source-nova-compute:4.0.0
-        compute_ssh: docker.io/kolla/ubuntu-source-nova-ssh:4.0.0
-        placement: docker.io/kolla/ubuntu-source-nova-placement-api:4.0.0
+        nova_api: docker.io/kolla/ubuntu-source-nova-api:4.0.0
+        nova_cell_setup: docker.io/kolla/ubuntu-source-nova-api:4.0.0
+        nova_compute: docker.io/kolla/ubuntu-source-nova-compute:4.0.0
+        nova_compute_ironic: docker.io/kolla/ubuntu-source-nova-compute-ironic:4.0.0
+        nova_compute_ssh: docker.io/kolla/ubuntu-source-nova-ssh:4.0.0
+        nova_conductor: docker.io/kolla/ubuntu-source-nova-conductor:4.0.0
+        nova_consoleauth: docker.io/kolla/ubuntu-source-nova-consoleauth:4.0.0
+        nova_db_sync: docker.io/kolla/ubuntu-source-nova-api:4.0.0
+        nova_novncproxy: docker.io/kolla/ubuntu-source-nova-novncproxy:4.0.0
+        nova_novncproxy_assets: docker.io/kolla/ubuntu-source-nova-novncproxy:4.0.0
+        nova_placement: docker.io/kolla/ubuntu-source-nova-placement-api:4.0.0
+        nova_scheduler: docker.io/kolla/ubuntu-source-nova-scheduler:4.0.0
+        nova_spiceproxy: docker.io/kolla/ubuntu-source-nova-spicehtml5proxy:4.0.0
+        nova_spiceproxy_assets: docker.io/kolla/ubuntu-source-nova-spicehtml5proxy:4.0.0
         bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
-        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
-        cell_setup: docker.io/kolla/ubuntu-source-nova-api:4.0.0
       pull_policy: Always
     network:
       novncproxy:
@@ -626,7 +753,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: nova
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -677,9 +804,10 @@ data:
   values:
     images:
       tags:
-        bootstrap: docker.io/kolla/ubuntu-source-neutron-server:4.0.0
-        db_init: docker.io/kolla/ubuntu-source-neutron-server:4.0.0
+        bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         neutron_db_sync: docker.io/kolla/ubuntu-source-neutron-server:4.0.0
+        db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         ks_user: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
         ks_service: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
         ks_endpoints: docker.io/kolla/ubuntu-source-kolla-toolbox:4.0.0
@@ -721,7 +849,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: neutron
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -781,13 +909,12 @@ data:
           debug: true
     images:
       tags:
-        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
-        ks_user: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
-        ks_service: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
-        ks_endpoints: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         cinder_db_sync: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
         db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_user: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_service: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        ks_endpoints: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         cinder_api: docker.io/kolla/ubuntu-source-cinder-api:4.0.0
         bootstrap: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         cinder_scheduler: docker.io/kolla/ubuntu-source-cinder-scheduler:4.0.0
@@ -808,7 +935,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: cinder
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -843,13 +970,13 @@ data:
         heat_cfn: docker.io/kolla/ubuntu-source-heat-api:4.0.0
         heat_cloudwatch: docker.io/kolla/ubuntu-source-heat-api:4.0.0
         heat_engine: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
-        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.2.1
+        heat_engine_cleaner: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
       pull_policy: Always
   source:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: heat
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -873,8 +1000,9 @@ data:
   values:
     images:
       tags:
-        db_init: docker.io/kolla/ubuntu-source-horizon:4.0.0
-        db_sync: docker.io/kolla/ubuntu-source-horizon:4.0.0
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
+        horizon_db_sync: docker.io/kolla/ubuntu-source-horizon:4.0.0
+        db_drop: docker.io/kolla/ubuntu-source-heat-engine:4.0.0
         horizon: docker.io/kolla/ubuntu-source-horizon:4.0.0
       pull_policy: Always
     pod:
@@ -895,7 +1023,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
     subpath: horizon
-    reference: 2.0.0
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
