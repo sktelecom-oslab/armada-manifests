@@ -830,21 +830,33 @@ data:
     conf:
       neutron_sudoers:
         override: |
-          # This sudoers file supports rootwrap-daemon for both Kolla and LOCI Images.
+          # This sudoers file supports rootwrap and rootwrap-daemon for both Kolla and LOCI Images.
           Defaults !requiretty
           Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/var/lib/openstack/bin:/var/lib/kolla/venv/bin"
-          neutron ALL = (root) NOPASSWD: /var/lib/kolla/venv/bin/neutron-rootwrap-daemon /etc/neutron/rootwrap.conf, /var/lib/openstack/bin/neutron-rootwrap-daemon /etc/neutron/rootwrap.conf
+          neutron ALL = (root) NOPASSWD: /var/lib/kolla/venv/bin/neutron-rootwrap /etc/neutron/rootwrap.conf *, /var/lib/openstack/bin/neutron-rootwrap /etc/neutron/rootwrap.conf *, /var/lib/kolla/venv/bin/neutron-rootwrap-daemon /etc/neutron/rootwrap.conf, /var/lib/openstack/bin/neutron-rootwrap-daemon /etc/neutron/rootwrap.conf
       neutron:
         DEFAULT:
+          core_plugin: ml2
+          service_plugins: router
           l3_ha: False
+          interface_driver: openvswitch
         agent:
-          root_helper: sudo
+          root_helper: sudo neutron-rootwrap /etc/neutron/rootwrap.conf
           root_helper_daemon: sudo neutron-rootwrap-daemon /etc/neutron/rootwrap.conf
       plugins:
         ml2_conf:
           ml2:
+            mechanism_drivers: openvswitch,l2population
             type_drivers: flat, vxlan
             tenant_network_types: vxlan
+        openvswitch_agent:
+          agent:
+            tunnel_types: vxlan
+          ovs:
+            bridge_mappings: external:br-ex
+          securitygroup:
+            # use iptables_hybrid for kernel versions lower than 4.3
+            firewall_driver: openvswitch
   source:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm
