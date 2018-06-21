@@ -22,7 +22,7 @@ metadata:
 data:
   chart_name: ldap
   release: ldap
-  namespace: lma
+  namespace: openstack
   install:
     no_hooks: false
   upgrade:
@@ -71,7 +71,7 @@ metadata:
 data:
   chart_name: elasticsearch
   release: elasticsearch
-  namespace: lma
+  namespace: openstack
   install:
     no_hooks: false
   upgrade:
@@ -101,7 +101,7 @@ metadata:
 data:
   chart_name: fluent-logging
   release: fluent-logging
-  namespace: lma
+  namespace: openstack
   install:
     no_hooks: false
   upgrade:
@@ -284,7 +284,7 @@ metadata:
 data:
   chart_name: kibana
   release: kibana
-  namespace: lma
+  namespace: openstack
   install:
     no_hooks: false
   upgrade:
@@ -314,7 +314,7 @@ metadata:
 data:
   chart_name: prometheus
   release: prometheus
-  namespace: lma
+  namespace: openstack
   install:
     no_hooks: false
   upgrade:
@@ -340,7 +340,7 @@ metadata:
 data:
   chart_name: prometheus-alertmanager
   release: prometheus-alertmanager
-  namespace: lma
+  namespace: openstack
   install:
     no_hooks: false
   upgrade:
@@ -363,7 +363,7 @@ metadata:
 data:
   chart_name: prometheus-kube-state-metrics
   release: prometheus-kube-state-metrics
-  namespace: lma
+  namespace: openstack
   install:
     no_hooks: false
   upgrade:
@@ -384,7 +384,7 @@ metadata:
 data:
   chart_name: prometheus-node-exporter
   release: prometheus-node-exporter
-  namespace: lma
+  namespace: openstack
   install:
     no_hooks: false
   upgrade:
