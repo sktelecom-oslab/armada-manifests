@@ -1,0 +1,490 @@
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: helm-toolkit
+data:
+  chart_name: helm-toolkit
+  release: helm-toolkit
+  namespace: helm-tookit
+  values: {}
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: helm-toolkit
+    reference: master
+  dependencies: []
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ldap
+data:
+  chart_name: ldap
+  release: ldap
+  namespace: lma
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    storage:
+      pvc:
+        enabled: false
+    bootstrap:
+      enabled: enabled
+    data:
+      sample: |
+        dn: ou=People,dc=cluster,dc=local
+        objectclass: organizationalunit
+        ou: People
+        description: We the People
+    
+        # NOTE: Password is "password" without quotes
+        dn: uid=taco,ou=People,dc=cluster,dc=local
+        objectClass: inetOrgPerson
+        objectClass: top
+        objectClass: posixAccount
+        objectClass: shadowAccount
+        objectClass: person
+        sn: taco
+        cn: taco
+        uid: taco
+        userPassword: {SSHA}l6OsaU3ABgWFdUAKvnhxohExurSDKIO2
+        description: SSHA
+        gidNumber: 1000
+        uidNumber: 1493
+        homeDirectory: /home/taco
+        mail: taco@cluster.local
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: ldap
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: elasticsearch
+data:
+  chart_name: elasticsearch
+  release: elasticsearch
+  namespace: lma
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    conf:
+      elasticsearch:
+        env:
+          java_opts: "-Xms2048m -Xmx2048m"
+    storage:
+      elasticsearch:
+        enabled: false
+      filesystem_repository:
+        enabled: false
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: elasticsearch
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: fluent-logging
+data:
+  chart_name: fluent-logging
+  release: fluent-logging
+  namespace: lma
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    dependencies:
+      static:
+        elasticsearch-template:
+          services:
+            - endpoint: internal
+              service: elasticsearch
+        fluentbit:
+          jobs:
+            - elasticsearch-template
+          services:
+            - endpoint: internal
+              service: elasticsearch
+    
+    conf:
+      fluentbit:
+      - service:
+          header: service
+          Flush: 5
+          Daemon: Off
+          Log_Level: info
+          Parsers_File: parsers.conf
+    
+      - containers_tail:
+          header: input
+          Name: tail
+          Tag: kube.*
+          Path: /var/log/containers/*.log
+          Parser: docker
+          DB: /var/log/flb_kube.db
+          Mem_Buf_Limit: 5MB
+      - kube_filter:
+          header: filter
+          Name: kubernetes
+          Match: kube.*
+          Merge_JSON_Log: On
+    
+      - syslog_tail:
+          header: input
+          Name: tail
+          Tag: syslog.*
+          Path: /var/log/syslog
+          Parser: syslog-kubelet
+          DB: /var/log/flb_kube.db
+          Mem_Buf_Limit: 5MB
+    
+      - cluster_filter:
+          header: filter
+          Name: record_modifier
+          Match: "*"
+          record: cluster somewhere-cluster
+    
+      - elasticsearch_docker:
+          header: output
+          Name: es
+          Match: "kube.*"
+          Host: elasticsearch-logging
+          Port: 80
+          Logstash_Format: On
+          Logstash_Prefix: kube
+          HTTP_User: "admin"
+          HTTP_Passwd: "changeme"
+          Type: container
+      - elasticsearch_syslog:
+          header: output
+          Name: es
+          Match: "syslog.*"
+          Host: elasticsearch-logging
+          Port: 80
+          Logstash_Format: On
+          Logstash_Prefix: syslog
+          HTTP_User: "admin"
+          HTTP_Passwd: "changeme"
+          Type: syslog
+    
+      parsers:
+      - docker:
+          header: parser
+          Name: docker
+          Format: json
+          Time_Key: time
+          Time_Format: '%Y-%m-%dT%H:%M:%S.%L'
+          Time_Keep: On
+      - syslog-kubelet:
+          header: parser
+          Name: syslog-kubelet
+          Format: regex
+          Regex: '^(?<time>.*[0-9]{2}:[0-9]{2}:[0-9]{2}) (?<host>[^ ]*) (?<app>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? (?<log>.+)$'
+          Time_Key: time
+          Time_Format: '%b %e %H:%M:%S'
+          Time_Keep: On
+
+      template:
+        kube:
+          template: "kube-*"
+          index_patterns: "kube-*"
+          settings:
+            number_of_shards: 5
+            number_of_replicas: 1
+          mappings:
+            container:
+              properties:
+                kubernetes:
+                  properties:
+                    container_name:
+                      type: keyword
+                    docker_id:
+                      type: keyword
+                    host:
+                      type: keyword
+                    labels:
+                      properties:
+                        app:
+                          type: keyword
+                        application:
+                          type: keyword
+                        component:
+                          type: keyword
+                        release_group:
+                          type: keyword
+                    namespace_name:
+                      type: keyword
+                    pod_id:
+                      type: keyword
+                    pod_name:
+                     type: keyword
+                log:
+                  type: text
+        syslog:
+          template: "syslog-*"
+          index_patterns: "syslog-*"
+          settings:
+            number_of_shards: 5
+            number_of_replicas: 1
+          mappings:
+            syslog:
+              properties:
+                cluster:
+                  type: keyword
+                app:
+                  type: keyword
+                host:
+                  type: keyword
+                pid:
+                  type: integer
+                log:
+                  type: text
+    manifests:
+      configmap_bin: true
+      configmap_etc: true
+      deployment_fluentd: false
+      daemonset_fluentbit: true
+      job_image_repo_sync: true
+      helm_tests: true
+      monitoring:
+        prometheus:
+          configmap_bin: true
+          deployment_exporter: true
+          service_exporter: true
+      secret_elasticsearch: true
+      service_fluentd: false
+      job_elasticsearch_template: true
+
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: fluent-logging
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: kibana 
+data:
+  chart_name: kibana
+  release: kibana
+  namespace: lma
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    network:
+      kibana:
+        ingress:
+          public: true
+          proxy_body_size: 1024M
+        node_port:
+          enabled: true
+          port: 30001
+        port: 5601
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: kibana
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: prometheus 
+data:
+  chart_name: prometheus
+  release: prometheus
+  namespace: lma
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    pod:
+      replicas:
+        prometheus: 3
+    storage:
+      enabled: false
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: prometheus
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: prometheus-alertmanager 
+data:
+  chart_name: prometheus-alertmanager
+  release: prometheus-alertmanager
+  namespace: lma
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    storage:
+      enabled: false
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: prometheus-alertmanager
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: prometheus-kube-state-metrics 
+data:
+  chart_name: prometheus-kube-state-metrics
+  release: prometheus-kube-state-metrics
+  namespace: lma
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: prometheus-kube-state-metrics
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: prometheus-node-exporter 
+data:
+  chart_name: prometheus-node-exporter
+  release: prometheus-node-exporter
+  namespace: lma
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    labels:
+      node_selector_key: node-exporter
+      node_selector_value: enabled
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: prometheus-node-exporter
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: prometheus-openstack-exporter 
+data:
+  chart_name: prometheus-openstack-exporter
+  release: prometheus-openstack-exporter
+  namespace: openstack
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: prometheus-openstack-exporter
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/Chart/v1
+metadata:
+  schema: metadata/Document/v1
+  name: grafana 
+data:
+  chart_name: grafana
+  release: grafana
+  namespace: openstack
+  install:
+    no_hooks: false
+  upgrade:
+    no_hooks: false
+  values:
+    images:
+      tags:
+        grafana: docker.io/grafana/grafana:4.5.2
+        datasource: docker.io/kolla/ubuntu-source-heat-engine:3.0.3
+        dep_check: quay.io/stackanetes/kubernetes-entrypoint:v0.3.0
+        db_init: docker.io/kolla/ubuntu-source-heat-engine:3.0.3
+        grafana_db_session_sync: docker.io/kolla/ubuntu-source-heat-engine:3.0.3
+        image_repo_sync: docker.io/docker:17.07.0
+  source:
+    type: git
+    location: https://github.com/sktelecom-oslab/openstack-helm-infra
+    subpath: grafana
+    reference: master
+  dependencies:
+    - helm-toolkit
+---
+schema: armada/ChartGroup/v1
+metadata:
+  schema: metadata/Document/v1
+  name: monitoring-infra
+data:
+  description: "Logging Infrastructure"
+  sequenced: False
+  chart_group:
+    - grafana
+    - prometheus
+    - prometheus-alertmanager
+    - prometheus-kube-state-metrics
+    - prometheus-node-exporter
+    - prometheus-openstack-exporter
+---
+schema: armada/ChartGroup/v1
+metadata:
+  schema: metadata/Document/v1
+  name: logging-infra
+data:
+  description: "Logging Infrastructure"
+  sequenced: False
+  chart_group:
+    - ldap
+    - elasticsearch
+    - fluent-logging
+    - kibana
+---
+schema: armada/Manifest/v1
+metadata:
+  schema: metadata/Document/v1
+  name: ha-manifest
+data:
+  release_prefix: ha
+  chart_groups:
+    - logging-infra
+    - monitoring-infra
