@@ -12,7 +12,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: helm-toolkit
-    reference: master
+    reference: 2.2.0
   dependencies: []
 ---
 schema: armada/Chart/v1
@@ -60,7 +60,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: ldap
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -90,7 +90,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: elasticsearch
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -273,7 +273,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: fluent-logging
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -303,7 +303,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: kibana
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -329,7 +329,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: prometheus
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -352,7 +352,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: prometheus-alertmanager
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -373,7 +373,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: prometheus-kube-state-metrics
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -397,7 +397,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: prometheus-node-exporter
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -418,7 +418,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: prometheus-openstack-exporter
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
@@ -444,7 +444,7 @@ data:
     type: git
     location: https://github.com/sktelecom-oslab/openstack-helm-infra
     subpath: grafana
-    reference: master
+    reference: 2.2.0
   dependencies:
     - helm-toolkit
 ---
