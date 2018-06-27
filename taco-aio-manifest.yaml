@@ -1020,6 +1020,11 @@ data:
     pod:
       replicas:
         server: 1
+    network:
+      external_policy_local: true
+      node_port:
+        enabled: true
+        port: 31000
     local_settings:
       openstack_neutron_network:
         enable_router: "True"
